@@ -1,12 +1,15 @@
 package org.example.cardshop.selenium;
 
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.annotation.DirtiesContext;
@@ -22,10 +25,16 @@ public class CardShopSeleniumTest {
 
     private WebDriver driver;
 
+    @BeforeAll
+    public static void setUpClass() {
+        WebDriverManager.firefoxdriver().setup();
+    }
+
     @BeforeEach
     public void setUp() {
-        System.setProperty("webdriver.gecko.driver", "/path/to/your/geckodriver"); // PRECISA COLAR O SEU CAMINHO AQUI
-        driver = new FirefoxDriver();
+        FirefoxOptions options = new FirefoxOptions();
+        options.addArguments("--headless");
+        driver = new FirefoxDriver(options);
     }
 
     @Test
