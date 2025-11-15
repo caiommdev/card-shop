@@ -9,25 +9,28 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class CardService {
+public class CardService implements ICardService {
 
     @Autowired
     private CardRepository cardRepository;
 
+    @Override
     public List<Card> findAll() {
         return cardRepository.findAll();
     }
 
+    @Override
     public Optional<Card> findById(Long id) {
         return cardRepository.findById(id);
     }
 
+    @Override
     public Card save(Card card) {
         return cardRepository.save(card);
     }
 
+    @Override
     public void deleteById(Long id) {
         cardRepository.deleteById(id);
     }
 }
-
