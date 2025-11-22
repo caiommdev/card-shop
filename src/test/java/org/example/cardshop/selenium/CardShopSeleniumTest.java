@@ -27,14 +27,37 @@ public class CardShopSeleniumTest {
 
     @BeforeAll
     public static void setUpClass() {
-        WebDriverManager.firefoxdriver().setup();
+        try {
+            WebDriverManager.firefoxdriver().setup();
+            System.out.println("✅ WebDriverManager configured successfully");
+        } catch (Exception e) {
+            System.err.println("❌ Error setting up WebDriverManager: " + e.getMessage());
+            throw e;
+        }
     }
 
     @BeforeEach
     public void setUp() {
-        FirefoxOptions options = new FirefoxOptions();
-        options.addArguments("--headless");
-        driver = new FirefoxDriver(options);
+        try {
+            FirefoxOptions options = new FirefoxOptions();
+            options.addArguments("--headless");
+            options.addArguments("--no-sandbox");
+            options.addArguments("--disable-dev-shm-usage");
+            options.addArguments("--disable-gpu");
+            options.addArguments("--window-size=1920,1080");
+
+            // Timeout configurations
+            options.setPageLoadTimeout(java.time.Duration.ofSeconds(30));
+
+            System.out.println("🔧 Creating Firefox driver with headless mode...");
+            driver = new FirefoxDriver(options);
+            driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(10));
+            System.out.println("✅ Firefox driver created successfully");
+        } catch (Exception e) {
+            System.err.println("❌ Error creating Firefox driver: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Test
