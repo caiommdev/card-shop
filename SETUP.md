@@ -69,7 +69,7 @@ export DB_HOST=localhost
 export DB_PASSWORD=cardshop
 
 # 4. Executar
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 ---
@@ -80,13 +80,13 @@ Os testes usam H2 em memória (não requer PostgreSQL):
 
 ```bash
 # Todos os testes
-./mvnw test
+mvn test
 
 # Apenas unitários
-./mvnw test -Dtest=!*Selenium*
+mvn test -Dtest=!*Selenium*
 
 # Apenas Selenium
-./mvnw test -Dtest=*Selenium*
+mvn test -Dtest=*Selenium*
 ```
 
 ---
@@ -261,16 +261,16 @@ docker-compose exec postgres psql -U cardshop
 
 ```bash
 # Build
-./mvnw clean package
+mvn clean package
 
 # Executar
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # Testes
-./mvnw test
+mvn test
 
 # Limpar
-./mvnw clean
+mvn clean
 ```
 
 ### Kubernetes
@@ -314,7 +314,7 @@ docker-compose exec app env | grep DB_
 ```bash
 # Testes usam H2, não PostgreSQL
 # Verificar se profile test está ativo
-./mvnw test -Dspring.profiles.active=test
+mvn test -Dspring.profiles.active=test
 ```
 
 ### Docker build falha
@@ -344,8 +344,8 @@ Para mais detalhes, consulte:
 
 - [ ] PostgreSQL rodando (via docker-compose ou local)
 - [ ] Variáveis de ambiente configuradas
-- [ ] Testes passando (`./mvnw test`)
-- [ ] App rodando localmente (`docker-compose up` ou `./mvnw spring-boot:run`)
+- [ ] Testes passando (`mvn test`)
+- [ ] App rodando localmente (`docker-compose up` ou `mvn spring-boot:run`)
 - [ ] Secrets configurados no GitHub (para CI/CD)
 - [ ] Environments criados no GitHub
 

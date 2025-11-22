@@ -39,7 +39,7 @@ docker-compose logs -f app
 # Configure as variáveis no .env
 
 # Execute a aplicação
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # Acesse a aplicação
 open http://localhost:8080
@@ -207,7 +207,7 @@ git clone https://github.com/seu-usuario/card-shop.git
 cd card-shop
 
 # 2. Execute a aplicação
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # 3. Acesse a aplicação
 # http://localhost:8080
@@ -217,17 +217,17 @@ cd card-shop
 
 ```bash
 # Testes unitários
-./mvnw test -Dtest=!*Selenium*
+mvn test -Dtest=!*Selenium*
 
 # Testes Selenium
-./mvnw test -Dtest=*Selenium*
+mvn test -Dtest=*Selenium*
 
 # Cobertura de código
-./mvnw jacoco:report
+mvn jacoco:report
 open target/site/jacoco/index.html
 
 # Análise de segurança
-./mvnw org.owasp:dependency-check-maven:check
+mvn org.owasp:dependency-check-maven:check
 open target/dependency-check-report.html
 ```
 
@@ -495,7 +495,7 @@ GET /actuator/prometheus
 
 ### Testes Selenium Falhando?
 1. Verifique screenshots em Artifacts
-2. Execute localmente: `./mvnw test -Dtest=*Selenium*`
+2. Execute localmente: `mvn test -Dtest=*Selenium*`
 3. Verifique se Firefox está instalado
 
 ### Deploy Kubernetes Falhou?
