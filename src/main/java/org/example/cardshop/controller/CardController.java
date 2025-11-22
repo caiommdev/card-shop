@@ -38,6 +38,7 @@ public class CardController {
     @PostMapping("/add")
     public String addCard(@Valid CardDto cardDto, BindingResult result, Model model) {
         if (result.hasErrors()) {
+            model.addAttribute("card", cardDto);
             return "add-card";
         }
         cardService.save(CardMapper.toEntity(cardDto));
@@ -54,6 +55,8 @@ public class CardController {
 
     @PostMapping("/edit/{id}")
     public String editCard(@PathVariable("id") long id, @Valid CardDto cardDto, BindingResult result, Model model) {
+            cardDto.setId(id);
+            model.addAttribute("card", cardDto);
         if (result.hasErrors()) {
             return "edit-card";
         }

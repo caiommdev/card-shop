@@ -2,31 +2,39 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Card Shop</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-<h1>Cards</h1>
-<a href="/add">Add Card</a>
-<table border="1">
-    <thead>
-    <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>Price</th>
-        <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="card : ${cards}">
-        <td th:text="${card.name}"></td>
-        <td th:text="${card.description}"></td>
-        <td th:text="${card.price}"></td>
-        <td>
-            <a th:href="@{/edit/{id}(id=${card.id})}">Edit</a>
-            <a th:href="@{/delete/{id}(id=${card.id})}">Delete</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Cards</h1>
+        <a href="/add" class="btn btn-primary">Add Card</a>
+    </div>
+    <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(cards)}">
+            <td colspan="4" class="text-center">No cards found.</td>
+        </tr>
+        <tr th:each="card : ${cards}">
+            <td th:text="${card.name}"></td>
+            <td th:text="${card.description}"></td>
+            <td th:text="${'$' + #numbers.formatDecimal(card.price, 1, 2)}"></td>
+            <td>
+                <a th:href="@{/edit/{id}(id=${card.id})}" class="btn btn-sm btn-info">Edit</a>
+                <a th:href="@{/delete/{id}(id=${card.id})}" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>
 
