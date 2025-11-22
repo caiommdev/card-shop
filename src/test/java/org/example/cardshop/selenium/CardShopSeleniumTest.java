@@ -29,7 +29,7 @@ public class CardShopSeleniumTest {
     public static void setUpClass() {
         try {
             WebDriverManager.firefoxdriver().setup();
-            System.out.println("✅ WebDriverManager configured successfully");
+            System.out.println("✅ FirefoxDriver configured successfully");
         } catch (Exception e) {
             System.err.println("❌ Error setting up WebDriverManager: " + e.getMessage());
             throw e;

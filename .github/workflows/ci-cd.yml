@@ -155,25 +155,20 @@ jobs:
         name: app-jar
         path: target/
 
-    - name: Setup Firefox and Geckodriver
+    - name: Setup Firefox
       run: |
-        # Instalar Firefox ESR (mais estável)
-        sudo apt-get update
-        sudo apt-get install -y firefox-esr
-        
-        # Verificar versão do Firefox
+        # Firefox já vem instalado no Ubuntu runner
         firefox --version
         
-        # Criar diretório para o geckodriver
-        sudo mkdir -p /usr/local/bin
+        # Instalar dependências necessárias
+        sudo apt-get update
+        sudo apt-get install -y xvfb
         
-        # O WebDriverManager no código vai gerenciar o geckodriver automaticamente
-        echo "✅ Firefox instalado com sucesso"
+        echo "✅ Firefox configurado"
 
     - name: Setup Display for Headless
       run: |
         # Configurar Xvfb para testes headless
-        sudo apt-get install -y xvfb
         export DISPLAY=:99
         sudo Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
         sleep 3
@@ -203,7 +198,7 @@ jobs:
       env:
         DISPLAY: :99
       run: |
-        echo "🧪 Running Selenium tests..."
+        echo "🧪 Running Selenium tests with Firefox..."
         mvn test -Dtest=*Selenium* -Dselenium.base.url=http://localhost:8080 || true
       continue-on-error: true
 
