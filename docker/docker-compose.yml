@@ -22,8 +22,8 @@ services:
 
   app:
     build:
-      context: .
-      dockerfile: docker/Dockerfile
+      context: ..
+      dockerfile: Dockerfile
     container_name: card-shop-app
     environment:
       DB_HOST: postgres

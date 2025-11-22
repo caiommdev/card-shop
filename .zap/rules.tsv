@@ -1,0 +1,19 @@
+# ZAP Scanning Rules Configuration
+# Format: <action> <score> <rule-id> <description>
+# Actions: IGNORE, INFO, WARN, FAIL
+
+# Ignore low priority alerts
+IGNORE	0	10049	Content Security Policy (CSP) Header Not Set
+IGNORE	0	10054	Cookie Without SameSite Attribute
+IGNORE	0	10096	Timestamp Disclosure
+
+# Warn on medium priority
+WARN	2	10038	Content Security Policy (CSP) Header Not Set
+WARN	2	10055	CSP: Wildcard Directive
+
+# Fail on high priority vulnerabilities
+FAIL	3	40012	Cross Site Scripting (Reflected)
+FAIL	3	40014	Cross Site Scripting (Persistent)
+FAIL	3	90019	SQL Injection
+FAIL	3	90020	Remote OS Command Injection
+
