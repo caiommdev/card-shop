@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: card-shop-db
+    environment:
+      POSTGRES_DB: cardshop
+      POSTGRES_USER: cardshop
+      POSTGRES_PASSWORD: cardshop
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardshop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - card-shop-network
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: card-shop-app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: cardshop
+      DB_USER: cardshop
+      DB_PASSWORD: cardshop
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - card-shop-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  card-shop-network:
+    driver: bridge
+

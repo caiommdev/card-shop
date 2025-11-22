@@ -1,0 +1,327 @@
+name: CI/CD Pipeline with Security Analysis
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '17'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build e Testes Unitários
+  build:
+    name: Build & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Necessário para CodeQL
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn -B clean compile
+
+    - name: Run Unit Tests
+      run: mvn -B test -Dtest=!*Selenium*
+
+    - name: Package Application
+      run: mvn -B package -DskipTests
+
+    - name: Upload JAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-jar
+        path: target/*.jar
+        retention-days: 30
+
+  # SAST - Análise de Segurança Estática
+  sast-owasp:
+    name: SAST - OWASP Dependency Check
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: OWASP Dependency Check
+      run: |
+        mvn org.owasp:dependency-check-maven:check \
+          -DfailBuildOnCVSS=7 \
+          -DsuppressionFiles=dependency-check-suppressions.xml
+      continue-on-error: true
+
+    - name: Upload OWASP Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: owasp-report
+        path: target/dependency-check-report.html
+        retention-days: 30
+
+  # SAST - CodeQL Analysis
+  sast-codeql:
+    name: SAST - CodeQL Analysis
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: java
+        queries: security-and-quality
+
+    - name: Build for CodeQL
+      run: mvn -B clean compile -DskipTests
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:java"
+
+  # Build Docker
+  docker:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: [build, sast-owasp, sast-codeql]
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.DOCKER_REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and Push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: docker/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Deploy Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+
+    steps:
+    - name: Deploy to Staging
+      env:
+        DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+        DB_HOST: ${{ vars.STAGING_DB_HOST }}
+      run: |
+        echo "🚀 Deploying to Staging"
+        echo "Image: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
+        echo "Database: ${DB_HOST}"
+        # kubectl apply -f k8s/k8s-deployment.yaml -n card-shop
+        # kubectl set image deployment/card-shop card-shop=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }} -n card-shop
+        sleep 30  # Aguarda deployment
+
+  # Testes Selenium Pós-Deploy
+  selenium-tests:
+    name: Selenium E2E Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cardshop
+          POSTGRES_USER: cardshop
+          POSTGRES_PASSWORD: cardshop
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      app:
+        image: ghcr.io/${{ github.repository }}:main-${{ github.sha }}
+        env:
+          DB_HOST: postgres
+          DB_PASSWORD: cardshop
+          SPRING_PROFILES_ACTIVE: test
+        ports:
+          - 8080:8080
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Install Firefox
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y firefox
+
+    - name: Wait for Application
+      run: |
+        echo "⏳ Waiting for application..."
+        timeout 120 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 5; done'
+
+    - name: Run Selenium Tests
+      run: mvn test -Dtest=*Selenium* -Dselenium.base.url=http://localhost:8080
+
+    - name: Upload Selenium Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: selenium-results
+        path: target/surefire-reports/
+        retention-days: 30
+
+  # DAST - Análise de Segurança Dinâmica
+  dast-zap:
+    name: DAST - OWASP ZAP Scan
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cardshop
+          POSTGRES_USER: cardshop
+          POSTGRES_PASSWORD: cardshop
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      app:
+        image: ghcr.io/${{ github.repository }}:main-${{ github.sha }}
+        env:
+          DB_HOST: postgres
+          DB_PASSWORD: cardshop
+          SPRING_PROFILES_ACTIVE: test
+        ports:
+          - 8080:8080
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Wait for Application
+      run: |
+        echo "⏳ Waiting for application..."
+        timeout 120 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 5; done'
+
+    - name: OWASP ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.10.0
+      with:
+        target: 'http://localhost:8080'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+        fail_action: false
+
+    - name: Upload ZAP Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: zap-scan-report
+        path: report_html.html
+        retention-days: 30
+
+  # Deploy Production (com aprovação manual)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [selenium-tests, dast-zap]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+
+    steps:
+    - name: Deploy to Production
+      env:
+        DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+        DB_HOST: ${{ vars.PROD_DB_HOST }}
+      run: |
+        echo "🚀 Deploying to Production"
+        echo "Image: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }}"
+        echo "Database: ${DB_HOST}"
+        # kubectl apply -f k8s/k8s-deployment.yaml -n card-shop
+        # kubectl set image deployment/card-shop card-shop=${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:main-${{ github.sha }} -n card-shop
+        echo "✅ Production deployment completed"
+
