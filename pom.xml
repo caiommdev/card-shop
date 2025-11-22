@@ -134,6 +134,19 @@
                         <format>HTML</format>
                         <format>JSON</format>
                     </formats>
+                    <!-- Configurações para evitar problemas com NVD API -->
+                    <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
+                    <nvdDatafeedUrl>https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz</nvdDatafeedUrl>
+                    <nvdMaxRetryCount>3</nvdMaxRetryCount>
+                    <nvdApiDelay>3000</nvdApiDelay>
+                    <!-- Usar dados locais se disponíveis -->
+                    <autoUpdate>true</autoUpdate>
+                    <cveUrlModified>https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-modified.json.gz</cveUrlModified>
+                    <cveUrlBase>https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-%d.json.gz</cveUrlBase>
+                    <!-- Não falhar se não conseguir atualizar -->
+                    <failOnError>false</failOnError>
+                    <!-- Cache local por 4 horas -->
+                    <cveValidForHours>4</cveValidForHours>
                 </configuration>
                 <executions>
                     <execution>

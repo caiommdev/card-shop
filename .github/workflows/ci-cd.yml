@@ -27,7 +27,7 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
-        java-version: ${{ env.JAVA_VERSION }}
+        java-version: '17'
         distribution: 'temurin'
         cache: maven
 
@@ -63,14 +63,25 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
-        java-version: ${{ env.JAVA_VERSION }}
+        java-version: '17'
         distribution: 'temurin'
         cache: maven
 
+    - name: Cache OWASP Dependency Check data
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository/org/owasp/dependency-check-data
+        key: owasp-data-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          owasp-data-
+
     - name: OWASP Dependency Check
+      env:
+        NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       run: |
         mvn org.owasp:dependency-check-maven:check \
           -DfailBuildOnCVSS=7 \
+          -DfailOnError=false \
           -DsuppressionFiles=dependency-check-suppressions.xml
       continue-on-error: true
 
@@ -101,7 +112,7 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
-        java-version: ${{ env.JAVA_VERSION }}
+        java-version: '17'
         distribution: 'temurin'
         cache: maven
 
@@ -222,7 +233,7 @@ jobs:
     - name: Setup JDK
       uses: actions/setup-java@v4
       with:
-        java-version: ${{ env.JAVA_VERSION }}
+        java-version: '17'
         distribution: 'temurin'
         cache: maven
 
