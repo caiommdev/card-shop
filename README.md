@@ -1,53 +1,529 @@
-# Manual de Execução
+# 🎴 Card Shop - Complete CI/CD Pipeline
 
-Este manual descreve como executar a aplicação, como funcionam os workflows de CI/CD com o GitHub Actions e as principais mudanças realizadas durante a refatoração do projeto.
+[![CI/CD Pipeline](https://github.com/seu-usuario/card-shop/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/seu-usuario/card-shop/actions/workflows/ci-cd.yml)
+[![Security](https://img.shields.io/badge/security-SAST%2FDAST-green)](https://github.com/seu-usuario/card-shop/security)
+[![Java](https://img.shields.io/badge/Java-17-orange)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.1-brightgreen)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-blue)](https://www.docker.com/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Ready-326CE5)](https://kubernetes.io/)
 
-## Como Rodar a Aplicação Integrada
+Sistema de gerenciamento de cards com pipeline CI/CD completo, incluindo build automatizado, testes, análise de segurança (SAST/DAST), deploy automatizado e gerenciamento de artefatos.
 
-Para executar a aplicação localmente, você precisará ter o Java 17 e o Maven instalados em sua máquina.
+> 🎯 **Projeto Profissional**: PostgreSQL persistente, estrutura organizada, docker-compose para dev local, secrets simplificados.
+> 📖 **Guia Rápido**: Veja [SETUP.md](SETUP.md) | **Mudanças**: Veja [CHANGELOG.md](CHANGELOG.md)
 
-1.  **Clone o repositório:**
-    ```bash
-    git clone <url-do-repositorio>
-    cd card-shop
-    ```
+## 🚀 Quick Start
 
-2.  **Execute a aplicação com o Maven:**
-    Abra um terminal na raiz do projeto e execute o seguinte comando:
-    ```bash
-    mvn spring-boot:run
-    ```
-    A aplicação será iniciada e estará acessível em [http://localhost:8080](http://localhost:8080).
+### Com Docker Compose (Recomendado)
 
-3.  **Execute os testes:**
-    Para rodar a suíte de testes, incluindo os testes de interface com Selenium, execute o comando:
-    ```bash
-    mvn test
-    ```
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/card-shop.git
+cd card-shop
 
-## Workflows do GitHub Actions
+# Inicie a aplicação e o banco de dados
+docker-compose up -d
 
-O projeto está configurado com um workflow de Integração Contínua (CI) usando o GitHub Actions.
+# Acesse a aplicação
+open http://localhost:8080
 
-### Como Funciona
+# Ver logs
+docker-compose logs -f app
+```
 
-O workflow está definido no arquivo `.github/workflows/maven.yml`. Ele é acionado automaticamente nos seguintes eventos:
--   `push`: Sempre que um novo commit é enviado para a branch `main`.
--   `pull_request`: Sempre que uma pull request é aberta ou atualizada para a branch `main`.
--   `workflow_dispatch`: Permite a execução manual do workflow a partir da aba "Actions" no GitHub.
+### Localmente (requer PostgreSQL)
 
-O workflow executa um job chamado `build` em um ambiente `ubuntu-latest` e realiza os seguintes passos:
-1.  **Checkout:** Clona o código do repositório.
-2.  **Set up JDK 17:** Configura o ambiente com Java 17.
-3.  **Build with Maven:** Compila o projeto e empacota a aplicação usando o comando `mvn -B package --file pom.xml`.
-4.  **Run tests:** Executa todos os testes automatizados com o comando `mvn test`.
+```bash
+# Certifique-se de ter PostgreSQL rodando
+# Configure as variáveis no .env
 
-### Como Interpretar os Resultados
+# Execute a aplicação
+mvn spring-boot:run
 
-1.  Navegue até o seu repositório no GitHub e clique na aba **Actions**.
-2.  Você verá uma lista de todas as execuções do workflow.
-3.  Um ícone de **check verde** (✅) indica que o workflow foi executado com sucesso (build e testes passaram).
-4.  Um ícone de **X vermelho** (❌) indica que houve uma falha em algum dos passos. Você pode clicar na execução para ver os logs detalhados e identificar o erro.
+# Acesse a aplicação
+open http://localhost:8080
+```
+
+## 📁 Estrutura do Projeto
+
+```
+card-shop/
+├── 📚 docs/                    # Documentação completa
+│   ├── IMPLEMENTATION_REPORT.md
+│   ├── PIPELINE_README.md
+│   ├── SECRETS_GUIDE.md
+│   ├── TUTORIAL.md
+│   ├── COMMANDS.md
+│   └── SUMMARY.md
+├── 🐳 docker/                  # Arquivos Docker
+│   ├── Dockerfile
+│   └── .dockerignore
+├── ☸️ k8s/                     # Kubernetes manifests
+│   └── k8s-deployment.yaml
+├── 📦 src/                     # Código fonte
+│   ├── main/
+│   │   ├── java/
+│   │   └── resources/
+│   └── test/
+├── 🚀 docker-compose.yml       # Dev local (app + PostgreSQL)
+├── 📖 SETUP.md                 # Guia rápido de configuração
+├── 📋 CHANGELOG.md             # Log de mudanças
+├── 🔧 .env.example             # Template de variáveis
+└── 📄 pom.xml                  # Maven configuration
+```
+
+## 📚 Documentação Completa
+
+Toda documentação está organizada na pasta `docs/`:
+
+| Documento | Descrição |
+|-----------|-----------|
+| **[docs/IMPLEMENTATION_REPORT.md](docs/IMPLEMENTATION_REPORT.md)** | ✅ **COMECE AQUI** - Relatório completo da implementação |
+| [docs/PIPELINE_README.md](docs/PIPELINE_README.md) | Documentação técnica do pipeline CI/CD |
+| [docs/SECRETS_GUIDE.md](docs/SECRETS_GUIDE.md) | Guia de configuração de secrets e variáveis |
+| [docs/TUTORIAL.md](docs/TUTORIAL.md) | Tutorial prático com exemplos de uso |
+| [docs/COMMANDS.md](docs/COMMANDS.md) | Referência rápida de comandos |
+| [.env.example](.env.example) | Template de variáveis de ambiente |
+
+## 🎯 Funcionalidades do Pipeline
+
+### ✅ Build Automatizado
+- Maven com cache de dependências
+- Build incremental otimizado
+- Testes unitários separados dos E2E
+
+### ✅ Testes Automatizados
+- **Testes Unitários**: JUnit + Mockito (no build)
+- **Testes E2E**: Selenium WebDriver (pós-deploy em staging)
+- **Service Containers**: PostgreSQL + App isolados
+
+### ✅ Análise de Segurança SAST (Obrigatório)
+- **OWASP Dependency Check**: Vulnerabilidades em dependências Maven
+- **CodeQL**: Análise semântica de código (SQL injection, XSS, etc)
+- **Execução**: Paralela após build
+- **Relatórios**: Artifacts + GitHub Security
+
+### ✅ Análise de Segurança DAST (Obrigatório)
+- **OWASP ZAP**: Testes dinâmicos na aplicação rodando
+- **Execução**: Após deploy em staging
+- **Testes**: XSS, SQL Injection, CSRF, Security Headers
+- **Relatórios**: HTML completo nos artifacts
+
+### ✅ Gerenciamento de Artefatos
+- JAR versionado (30 dias)
+- Imagens Docker no GitHub Container Registry
+- Relatórios OWASP, CodeQL, ZAP, Selenium
+
+### ✅ Deploy Automatizado
+- Docker multi-stage build
+- Kubernetes com PostgreSQL
+- Health checks (liveness/readiness)
+- Deploy staging automático
+
+### ✅ Múltiplos Ambientes
+- **Staging**: Deploy automático após SAST
+- **Production**: Requer aprovação manual após DAST
+
+### ✅ Gerenciamento de Secrets
+- GitHub Secrets: `PROD_DB_PASSWORD`, `STAGING_DB_PASSWORD`
+- GitHub Variables: `PROD_DB_HOST`, `STAGING_DB_HOST`
+- Kubernetes Secrets para runtime
+
+## 🏗️ Arquitetura do Pipeline
+
+```
+┌──────────────┐
+│ Git Push/PR  │
+└──────┬───────┘
+       ↓
+┌──────────────────────────────────────┐
+│ Build & Test (3-5 min)               │
+│ • Maven build                         │
+│ • Unit tests                          │
+│ • JaCoCo coverage                     │
+└──────┬───────────────────────────────┘
+       ↓
+┌──────────────────────────────────────┐
+│ Security SAST (5-10 min)             │
+│ • OWASP Dependency Check              │
+│ • SpotBugs                            │
+│ • CodeQL                              │
+└──────┬───────────────────────────────┘
+       ↓
+┌──────────────────────────────────────┐
+│ Package & Docker Build (3-5 min)     │
+│ • Maven package                       │
+│ • Docker build & push                 │
+│ • Trivy scan                          │
+└──────┬───────────────────────────────┘
+       ↓
+┌──────────────────────────────────────┐
+│ Deploy Staging (2-3 min)             │
+│ • Kubernetes deploy                   │
+│ • Health checks                       │
+└──────┬───────────────────────────────┘
+       ↓
+┌──────────────────────────────────────┐
+│ Selenium Tests (5-8 min)             │
+│ • E2E tests pós-deploy                │
+│ • Screenshots em falhas               │
+└──────┬───────────────────────────────┘
+       ↓
+┌──────────────────────────────────────┐
+│ Security DAST (5-10 min)             │
+│ • OWASP ZAP scan                      │
+│ • Penetration testing                 │
+└──────┬───────────────────────────────┘
+       ↓
+┌──────────────────────────────────────┐
+│ ⏸️ Manual Approval                    │
+└──────┬───────────────────────────────┘
+       ↓
+┌──────────────────────────────────────┐
+│ Deploy Production (3-5 min)          │
+│ • Production deployment               │
+│ • Verification                        │
+└──────────────────────────────────────┘
+```
+
+**Tempo total**: ~25-35 minutos (até aprovação manual)
+
+## 🔧 Como Rodar Localmente
+
+### Pré-requisitos
+```bash
+- Java 17+
+- Maven 3.8+
+- Docker 20+ (opcional)
+- kubectl (opcional)
+```
+
+### Execução Local
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/seu-usuario/card-shop.git
+cd card-shop
+
+# 2. Execute a aplicação
+mvn spring-boot:run
+
+# 3. Acesse a aplicação
+# http://localhost:8080
+```
+
+### Testes
+
+```bash
+# Testes unitários
+mvn test -Dtest=!*Selenium*
+
+# Testes Selenium
+mvn test -Dtest=*Selenium*
+
+# Cobertura de código
+mvn jacoco:report
+open target/site/jacoco/index.html
+
+# Análise de segurança
+mvn org.owasp:dependency-check-maven:check
+open target/dependency-check-report.html
+```
+
+### Docker Compose
+
+```bash
+# Iniciar aplicação + PostgreSQL
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+
+# Parar
+docker-compose down
+
+# Limpar volumes (remove dados do banco)
+docker-compose down -v
+```
+
+### Docker (standalone)
+
+```bash
+# Build da imagem
+docker build -f docker/Dockerfile -t card-shop:local .
+
+# Executar container (requer PostgreSQL externo)
+docker run -p 8080:8080 \
+  -e DB_HOST=host.docker.internal \
+  -e DB_PASSWORD=cardshop \
+  card-shop:local
+
+# Health check
+curl http://localhost:8080/actuator/health
+```
+
+## 🚀 Deploy
+
+### Deploy Automático
+
+```bash
+# Push para main aciona pipeline automaticamente
+git add .
+git commit -m "feat: New feature"
+git push origin main
+
+# Pipeline executa:
+# ✅ Build e testes
+# ✅ Análise de segurança
+# ✅ Deploy em staging
+# ⏸️ Aguarda aprovação para produção
+```
+
+### Deploy Manual
+
+```bash
+# Via GitHub CLI
+gh workflow run ci-cd-complete.yml \
+  --ref main \
+  --field deploy_environment=staging
+```
+
+### Criar Release
+
+```bash
+# Criar tag e release
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+
+gh release create v1.0.0 \
+  --title "Release v1.0.0" \
+  --notes "Release notes"
+```
+
+## 🔐 Configuração de Secrets
+
+### Passo 1: Gerar Secret do Banco
+
+```bash
+# Gerar senha segura para o banco
+openssl rand -base64 32
+```
+
+### Passo 2: Configurar no GitHub
+
+**Repository Secrets:**
+```
+Settings → Secrets and variables → Actions → New repository secret
+
+Nome: PROD_DB_PASSWORD
+Valor: [senha gerada]
+
+Nome: STAGING_DB_PASSWORD
+Valor: [senha gerada]
+```
+
+**Repository Variables:**
+```
+Settings → Secrets and variables → Actions → Variables tab
+
+Nome: PROD_DB_HOST
+Valor: postgres-prod.example.com
+
+Nome: STAGING_DB_HOST
+Valor: postgres-staging.example.com
+```
+
+### Passo 3: Configurar Environments
+
+```
+Settings → Environments → New environment
+
+1. staging (sem aprovação)
+2. production-approval (com aprovação)
+3. production (com aprovação)
+```
+
+**📖 Guia completo**: [docs/SECRETS_GUIDE.md](docs/SECRETS_GUIDE.md)
+
+## 📊 Workflows do GitHub Actions
+
+### Pipeline CI/CD com SAST/DAST
+**Arquivo**: `.github/workflows/ci-cd.yml`
+
+**Gatilhos**:
+- Push na branch `main`
+- Pull requests para `main`
+- Manual (workflow_dispatch)
+
+**Jobs** (9 jobs com segurança completa):
+1. **Build & Test** - Maven build e testes unitários
+2. **SAST: OWASP** - Análise de dependências (obrigatório)
+3. **SAST: CodeQL** - Análise de código (obrigatório)
+4. **Docker Build & Push** - Imagem para ghcr.io
+5. **Deploy Staging** - Deploy automático
+6. **Selenium Tests** - Testes E2E pós-deploy (obrigatório)
+7. **DAST: OWASP ZAP** - Análise dinâmica (obrigatório)
+8. **Deploy Production** - Deploy com aprovação manual
+
+**Tempo**: ~20-30 minutos
+
+**Requisitos Atendidos**:
+- ✅ **SAST** (Static Application Security Testing)
+- ✅ **DAST** (Dynamic Application Security Testing)
+- ✅ **Testes Automatizados Pós-Deploy**
+
+🔒 **Segurança**: Veja [docs/SECURITY_ANALYSIS.md](docs/SECURITY_ANALYSIS.md)
+
+### Como Interpretar Resultados
+
+1. Acesse **Actions** no GitHub
+2. Clique no workflow "Complete CI/CD Pipeline"
+3. ✅ Verde = Sucesso
+4. ❌ Vermelho = Falha (clique para ver logs)
+5. 🟡 Amarelo = Em andamento
+6. ⏸️ Cinza = Aguardando aprovação
+
+## 🛡️ Segurança
+
+### SAST (Static Analysis)
+- ✅ OWASP Dependency Check
+- ✅ SpotBugs
+- ✅ CodeQL
+
+### DAST (Dynamic Analysis)
+- ✅ OWASP ZAP
+- ✅ Trivy container scan
+
+### Best Practices
+- ✅ Secrets management
+- ✅ Least privilege access
+- ✅ Automated scanning
+- ✅ Vulnerability alerts
+
+## 📦 Tecnologias Utilizadas
+
+### Backend
+- Java 17
+- Spring Boot 3.3.1
+- Spring Data JPA
+- PostgreSQL 16 (production)
+- H2 Database (tests only)
+- Hibernate
+
+### Frontend
+- Thymeleaf
+- Bootstrap 4.5.2
+- HTML5/CSS3
+
+### Testes
+- JUnit 5
+- Mockito
+- Selenium WebDriver
+- JaCoCo (coverage)
+
+### CI/CD
+- GitHub Actions
+- Maven
+- Docker
+- Kubernetes
+
+### Segurança
+- OWASP Dependency Check
+- SpotBugs
+- CodeQL
+- OWASP ZAP
+- Trivy
+
+## 📖 Documentação API
+
+### Endpoints Principais
+
+```bash
+# Home - Lista de cards
+GET /
+
+# Adicionar card (formulário)
+GET /add
+
+# Adicionar card (submit)
+POST /add
+
+# Editar card (formulário)
+GET /edit/{id}
+
+# Editar card (submit)
+POST /edit/{id}
+
+# Deletar card
+GET /delete/{id}
+```
+
+### Endpoints Actuator
+
+```bash
+# Health check
+GET /actuator/health
+
+# Liveness probe
+GET /actuator/health/liveness
+
+# Readiness probe
+GET /actuator/health/readiness
+
+# Metrics
+GET /actuator/metrics
+
+# Prometheus metrics
+GET /actuator/prometheus
+```
+
+## 🤝 Contribuindo
+
+1. Fork o projeto
+2. Crie uma feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'feat: Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 🐛 Troubleshooting
+
+### Pipeline Falhou?
+1. Verifique os logs no GitHub Actions
+2. Baixe os artefatos para análise
+3. Consulte [TUTORIAL.md](TUTORIAL.md) seção "Debugging"
+
+### Testes Selenium Falhando?
+1. Verifique screenshots em Artifacts
+2. Execute localmente: `mvn test -Dtest=*Selenium*`
+3. Verifique se Firefox está instalado
+
+### Deploy Kubernetes Falhou?
+1. Verifique secrets: `kubectl get secrets -n card-shop`
+2. Verifique logs: `kubectl logs -f deployment/card-shop -n card-shop`
+3. Verifique eventos: `kubectl get events -n card-shop`
+
+## 📞 Suporte
+
+- **Issues**: [GitHub Issues](https://github.com/seu-usuario/card-shop/issues)
+- **Documentação**: Veja os arquivos markdown neste repositório
+- **Email**: seu-email@example.com
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## ✨ Próximos Passos
+
+1. ✅ Leia [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md)
+2. ✅ Configure secrets (veja [SECRETS_GUIDE.md](SECRETS_GUIDE.md))
+3. ✅ Configure environments no GitHub
+4. ✅ Faça primeiro push e acompanhe o pipeline
+5. ✅ Aprove deploy em produção quando solicitado
+
+---
+
+⭐ **Made with ❤️ using GitHub Actions, Docker & Kubernetes**
 
 ## Principais Mudanças na Refatoração
 

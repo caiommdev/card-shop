@@ -1,0 +1,10 @@
+.dockerignore
+target/
+.git/
+.github/
+.idea/
+.mvn/
+*.md
+.gitignore
+.gitattributes
+
