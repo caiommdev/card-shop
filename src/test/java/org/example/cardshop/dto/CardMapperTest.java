@@ -1,6 +1,7 @@
 package org.example.cardshop.dto;
 
 import org.example.cardshop.model.Card;
+import org.example.cardshop.service.CardMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

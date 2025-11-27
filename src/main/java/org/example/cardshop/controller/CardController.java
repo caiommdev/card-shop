@@ -2,7 +2,7 @@ package org.example.cardshop.controller;
 
 import jakarta.validation.Valid;
 import org.example.cardshop.dto.CardDto;
-import org.example.cardshop.dto.CardMapper;
+import org.example.cardshop.service.CardMapper;
 import org.example.cardshop.model.Card;
 import org.example.cardshop.service.ICardService;
 import org.springframework.beans.factory.annotation.Autowired;

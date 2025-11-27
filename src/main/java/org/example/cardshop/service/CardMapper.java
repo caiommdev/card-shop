@@ -1,5 +1,6 @@
-package org.example.cardshop.dto;
+package org.example.cardshop.service;
 
+import org.example.cardshop.dto.CardDto;
 import org.example.cardshop.model.Card;
 
 public class CardMapper {
