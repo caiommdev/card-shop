@@ -1,11 +1,13 @@
 package org.example.cardshop.selenium;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.example.cardshop.selenium.pages.AddCardPage;
+import org.example.cardshop.selenium.pages.EditCardPage;
+import org.example.cardshop.selenium.pages.HomePage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -15,6 +17,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.annotation.DirtiesContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.profiles.active=test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -24,6 +28,10 @@ public class CardShopSeleniumTest {
     private int port;
 
     private WebDriver driver;
+    private HomePage homePage;
+    private AddCardPage addCardPage;
+    private EditCardPage editCardPage;
+    private String baseUrl;
 
     @BeforeAll
     public static void setUpClass() {
@@ -53,6 +61,11 @@ public class CardShopSeleniumTest {
             driver = new FirefoxDriver(options);
             driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(10));
             System.out.println("✅ Firefox driver created successfully");
+
+            baseUrl = "http://localhost:" + port;
+            homePage = new HomePage(driver);
+            addCardPage = new AddCardPage(driver);
+            editCardPage = new EditCardPage(driver);
         } catch (Exception e) {
             System.err.println("❌ Error creating Firefox driver: " + e.getMessage());
             e.printStackTrace();
@@ -62,61 +75,164 @@ public class CardShopSeleniumTest {
 
     @Test
     public void testAddCard() {
-        driver.get("http://localhost:" + port + "/");
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
 
-        driver.findElement(By.linkText("Add Card")).click();
+        addCardPage.addCard("Test Card", "Test Description", "10.0");
 
-        WebElement nameField = driver.findElement(By.id("name"));
-        WebElement descriptionField = driver.findElement(By.id("description"));
-        WebElement priceField = driver.findElement(By.id("price"));
-        WebElement submitButton = driver.findElement(By.cssSelector("input[type='submit']"));
-
-        nameField.sendKeys("Test Card");
-        descriptionField.sendKeys("Test Description");
-        priceField.sendKeys("10.0");
-        submitButton.click();
-
-        driver.get("http://localhost:" + port + "/");
-        WebElement cardName = driver.findElement(By.xpath("//td[text()='Test Card']"));
+        homePage.navigateTo(baseUrl + "/");
+        WebElement cardName = homePage.findCardInList("Test Card");
         assertEquals("Test Card", cardName.getText());
     }
 
     @Test
     public void testEditCard() {
-        driver.get("http://localhost:" + port + "/add");
-        driver.findElement(By.id("name")).sendKeys("Card to Edit");
-        driver.findElement(By.id("description")).sendKeys("Description");
-        driver.findElement(By.id("price")).sendKeys("15.0");
-        driver.findElement(By.cssSelector("input[type='submit']")).click();
+        addCardPage.navigateTo(baseUrl + "/add");
+        addCardPage.addCard("Card to Edit", "Description", "15.0");
 
-        driver.get("http://localhost:" + port + "/");
-        driver.findElement(By.xpath("//td[text()='Card to Edit']/following-sibling::td/a[text()='Edit']")).click();
+        homePage.navigateTo(baseUrl + "/");
+        homePage.getEditLinkForCard("Card to Edit").click();
 
-        WebElement nameField = driver.findElement(By.id("name"));
-        nameField.clear();
-        nameField.sendKeys("Edited Card");
-        driver.findElement(By.cssSelector("input[type='submit']")).click();
+        editCardPage.editCardName("Edited Card");
 
-        driver.get("http://localhost:" + port + "/");
-        WebElement cardName = driver.findElement(By.xpath("//td[text()='Edited Card']"));
+        homePage.navigateTo(baseUrl + "/");
+        WebElement cardName = homePage.findCardInList("Edited Card");
         assertEquals("Edited Card", cardName.getText());
     }
 
     @Test
     public void testDeleteCard() {
-        driver.get("http://localhost:" + port + "/add");
-        driver.findElement(By.id("name")).sendKeys("Card to Delete");
-        driver.findElement(By.id("description")).sendKeys("Description");
-        driver.findElement(By.id("price")).sendKeys("20.0");
-        driver.findElement(By.cssSelector("input[type='submit']")).click();
+        addCardPage.navigateTo(baseUrl + "/add");
+        addCardPage.addCard("Card to Delete", "Description", "20.0");
 
-        driver.get("http://localhost:" + port + "/");
-        WebElement deleteLink = driver.findElement(By.xpath("//td[text()='Card to Delete']/following-sibling::td/a[text()='Delete']"));
-        deleteLink.click();
+        homePage.navigateTo(baseUrl + "/");
+        homePage.getDeleteLinkForCard("Card to Delete").click();
 
-        driver.get("http://localhost:" + port + "/");
-        assertEquals(0, driver.findElements(By.xpath("//td[text()='Card to Delete']")).size());
+        homePage.navigateTo(baseUrl + "/");
+        assertEquals(0, homePage.getCardCount("Card to Delete"));
     }
+
+
+    @Test
+    public void testAddCard_WithSpecialCharacters() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("Card @#$%", "Description with !@#$", "25.99");
+
+        homePage.navigateTo(baseUrl + "/");
+        WebElement cardName = homePage.findCardInList("Card @#$%");
+        assertEquals("Card @#$%", cardName.getText());
+    }
+
+    @Test
+    public void testAddCard_WithLongName() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        String longName = "This is a very long card name with many characters to test the system behavior";
+        addCardPage.addCard(longName, "Test Description", "15.50");
+
+        homePage.navigateTo(baseUrl + "/");
+        WebElement cardName = homePage.findCardInList(longName);
+        assertEquals(longName, cardName.getText());
+    }
+
+    @Test
+    public void testAddCard_WithDecimalPrice() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("Decimal Price Card", "Testing decimal prices", "99.99");
+
+        homePage.navigateTo(baseUrl + "/");
+        WebElement cardName = homePage.findCardInList("Decimal Price Card");
+        assertEquals("Decimal Price Card", cardName.getText());
+    }
+
+    @Test
+    public void testAddCard_WithEmptyName_ShouldShowError() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("", "Test Description", "10.0");
+
+        assertFalse(addCardPage.isSubmitButtonEnabled(), "Submit button should be disabled when name is empty");
+    }
+
+    @Test
+    public void testAddCard_WithEmptyDescription_ShouldShowError() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("Test Card", "", "10.0");
+
+        assertFalse(addCardPage.isSubmitButtonEnabled(), "Submit button should be disabled when description is empty");
+    }
+
+    @Test
+    public void testAddCard_WithNegativePrice_ShouldShowError() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("Test Card", "Test Description", "-10.0");
+
+        assertFalse(addCardPage.isSubmitButtonEnabled(), "Submit button should be disabled when price is negative");
+    }
+
+    @Test
+    public void testAddCard_WithZeroPrice_ShouldShowError() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("Test Card", "Test Description", "0");
+
+        assertFalse(addCardPage.isSubmitButtonEnabled(), "Submit button should be disabled when price is zero");
+    }
+
+    @Test
+    public void testAddCard_WithBlankName_ShouldShowError() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("   ", "Test Description", "10.0");
+
+        assertFalse(addCardPage.isSubmitButtonEnabled(), "Submit button should be disabled when name is blank");
+    }
+
+    @Test
+    public void testAddCard_WithAllFieldsEmpty_ShouldShowMultipleErrors() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("", "", "");
+
+        assertFalse(addCardPage.isSubmitButtonEnabled(), "Submit button should be disabled when all fields are empty");
+    }
+
+    @Test
+    public void testEditCard_WithEmptyName_ShouldShowError() {
+        addCardPage.navigateTo(baseUrl + "/add");
+        addCardPage.addCard("Card to Edit", "Description", "15.0");
+
+        homePage.navigateTo(baseUrl + "/");
+        homePage.getEditLinkForCard("Card to Edit").click();
+
+        editCardPage.editCardName("");
+
+        assertFalse(editCardPage.isSubmitButtonEnabled(), "Submit button should be disabled when name is empty");
+    }
+
+    @Test
+    public void testAddCard_ShouldStayOnPageWhenValidationFails() {
+        homePage.navigateTo(baseUrl + "/");
+        homePage.clickAddCard();
+
+        addCardPage.addCard("", "Test Description", "10.0");
+
+        assertEquals(true, addCardPage.isOnAddPage());
+    }
+
 
     @AfterEach
     public void tearDown() {

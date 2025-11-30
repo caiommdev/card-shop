@@ -55,9 +55,9 @@ public class CardController {
 
     @PostMapping("/edit/{id}")
     public String editCard(@PathVariable("id") long id, @Valid CardDto cardDto, BindingResult result, Model model) {
-            cardDto.setId(id);
-            model.addAttribute("card", cardDto);
+        cardDto.setId(id);
         if (result.hasErrors()) {
+            model.addAttribute("card", cardDto);
             return "edit-card";
         }
         cardService.save(CardMapper.toEntity(cardDto));
